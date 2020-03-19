@@ -12,12 +12,12 @@ import os
 import cv2
 import dlib
 import matplotlib.pyplot as plt
-
+from keras.models import load_model
 
 person_rep={0: 'soobin', 1: 'noo phuoc thinh', 2: 'son tung', 3: 'mai phuong thuy', 4: 'my tam', 5: 'bich phuong'}
 
 if __name__ == '__main__':
-  file_path = input("Path to image with file size < 100 kb ? ")
+  file_path = input("path to image:")
   dnnFaceDetector = dlib.cnn_face_detection_model_v1("mmod_human_face_detector.dat")
   img = cv2.imread(file_path)
   if img is None or img.size is 0:
