@@ -12,9 +12,102 @@ import os
 import cv2
 import dlib
 import matplotlib.pyplot as plt
-from keras.models import load_model
+import json
+from keras.models import model_from_json, load_model
+
+# Define VGG_FACE_MODEL architecture
+model = Sequential()
+model.add(ZeroPadding2D((1,1),input_shape=(224,224, 3)))
+model.add(Convolution2D(64, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(128, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(128, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(256, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(256, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(256, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(ZeroPadding2D((1,1)))
+model.add(Convolution2D(512, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+model.add(Convolution2D(4096, (7, 7), activation='relu'))
+model.add(Dropout(0.5))
+model.add(Convolution2D(4096, (1, 1), activation='relu'))
+model.add(Dropout(0.5))
+model.add(Convolution2D(2622, (1, 1)))
+model.add(Flatten())
+model.add(Activation('softmax'))
+
+# Load VGG Face model weights
+model.load_weights('vgg_face_weights.h5')
+
+
+vgg_face=Model(inputs=model.layers[0].input,outputs=model.layers[-2].output)
+''''
+x_train=[]
+y_train=['bich phuong']
+img=load_img('b.jpg',target_size=(224,224))
+img=img_to_array(img)
+img=np.expand_dims(img,axis=0)
+img=preprocess_input(img)
+img_encode=vgg_face(img)
+x_train.append(np.squeeze(K.eval(img_encode)).tolist())
+
+
+  # Prepare Test Data
+    x_test = []
+    y_test = []
+    test_image_names=os.listdir( 'Test_Images_crop/'+person+'/')
+    for image_name in test_image_names:
+      img = load_img( 'Test_Images_crop/' + person + '/' + image_name, target_size=(224, 224))
+      img = img_to_array(img)
+      img = np.expand_dims(img, axis=0)
+      img = preprocess_input(img)
+      img_encode = vgg_face(img)
+      x_test.append(np.squeeze(K.eval(img_encode)).tolist())
+      y_test.append(i)
+
+
+x_train=np.array(x_train)
+y_train=np.array(y_train)
+'''
+
+
+
+classifier_model=Sequential()
+classifier_model.add(Dense(units=100,input_dim=2622,kernel_initializer='glorot_uniform'))
+classifier_model.add(BatchNormalization())
+classifier_model.add(Activation('tanh'))
+classifier_model.add(Dropout(0.3))
+classifier_model.add(Dense(units=10,kernel_initializer='glorot_uniform'))
+classifier_model.add(BatchNormalization())
+classifier_model.add(Activation('tanh'))
+classifier_model.add(Dropout(0.2))
+classifier_model.add(Dense(units=6,kernel_initializer='he_uniform'))
+classifier_model.add(Activation('softmax'))
+classifier_model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),optimizer='nadam',metrics=['accuracy'])
+classifier_model.load_weights('face.h5')
 
 person_rep={0: 'soobin', 1: 'noo phuoc thinh', 2: 'son tung', 3: 'mai phuong thuy', 4: 'my tam', 5: 'bich phuong'}
+
 
 if __name__ == '__main__':
   file_path = input("path to image:")
@@ -22,7 +115,6 @@ if __name__ == '__main__':
   img = cv2.imread(file_path)
   if img is None or img.size is 0:
     print("Please check image path or some error occured")
-
   else:
     persons_in_img = []
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
